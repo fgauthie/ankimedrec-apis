@@ -93,9 +93,14 @@ module.exports = function (app) {
 	
 	var hasPayload = mongoSanitize.has(q);
 	if(hasPayload) {
+	    var ip = req.headers['x-forwarded-for'] || 
+		req.connection.remoteAddress || 
+		req.socket.remoteAddress ||
+		req.connection.socket.remoteAddress;
+
 	    console.log("Found some bad chars!!!");
             msg = {
-                body: "notify text w/ extra payload",
+                body: "Someone is trying to break into your app! Here's the offender's IP: "+ ip,
                 msgtype: "m.notice",
                 extra: { payload: "Found somee bad chars!!!" }
             }
