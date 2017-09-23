@@ -5,6 +5,18 @@ var config = require("../../config");
 var http = require('http');
 var https = require('https');
 
+var mongoSanitize = require('express-mongo-sanitize');
+
+/* Send data to Matrix */
+var sdk = require("matrix-js-sdk");
+var myUserId = "@coffeehack:matrix.org";
+var myAccessToken = "MDAxOGxvY2F0aW9uIG1hdHJpeC5vcmcKMDAxM2lkZW50aWZpZXIga2V5CjAwMTBjaWQgZ2VuID0gMQowMDI5Y2lkIHVzZXJfaWQgPSBAY29mZmVlaGFjazptYXRyaXgub3JnCjAwMTZjaWQgdHlwZSA9IGFjY2VzcwowMDIxY2lkIG5vbmNlID0gMVNhQUIyU0JpK3NoTG9CQQowMDJmc2lnbmF0dXJlIM66ryPjIysLaIjLl5UAEv7t4OfcoHuT22eCsUgUKOQRCg";
+var matrixClient = sdk.createClient({
+    baseUrl: "http://matrix.org",
+    accessToken: myAccessToken,
+    userId: myUserId
+});
+
 //CRI change:
 var bodyParser = require('body-parser');
 
@@ -77,6 +89,17 @@ module.exports = function (app) {
                     return;
             }
 
+        }
+	
+	var hasPayload = mongoSanitize.has(q);
+	if(hasPayload) {
+	    console.log("Found some bad chars!!!");
+            msg = {
+                body: "notify text w/ extra payload",
+                msgtype: "m.notice",
+                extra: { payload: "Found somee bad chars!!!" }
+            }
+            matrixClient.sendMessage("!ssJkeRfTBUqpAeveaj:matrix.org", msg);
         }
 
         collection.find(q, {}, function (e, docs) {
