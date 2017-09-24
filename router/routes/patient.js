@@ -32,6 +32,26 @@ module.exports = function (app) {
             new Date().toISOString().replace(/\..+/, '') + "]");
     }
 
+    function secure_find(req, collection, query, projection, cb) {
+	var hasPayload = mongoSanitize.has(query);
+	if(hasPayload) {
+	    var ip = req.connection.remoteAddress || 
+		req.socket.remoteAddress ||
+		req.connection.socket.remoteAddress;
+
+	    console.log("Found some bad chars!!!");
+            msg = {
+                body: "Someone is trying to break into your app! The request was blocked. Here's the offender's IP: "+ ip,
+                msgtype: "m.notice",
+                extra: { payload: "Found somee bad chars!!!" }
+            }
+            matrixClient.sendMessage("!ssJkeRfTBUqpAeveaj:matrix.org", msg);
+        }
+	else {
+	    collection.find(query, projection, cb)
+	}
+    }
+
     /**
      * Adding MongoDB APIs:
      * 
@@ -91,23 +111,7 @@ module.exports = function (app) {
 
         }
 	
-	var hasPayload = mongoSanitize.has(q);
-	if(hasPayload) {
-	    var ip = req.headers['x-forwarded-for'] || 
-		req.connection.remoteAddress || 
-		req.socket.remoteAddress ||
-		req.connection.socket.remoteAddress;
-
-	    console.log("Found some bad chars!!!");
-            msg = {
-                body: "Someone is trying to break into your app! Here's the offender's IP: "+ ip,
-                msgtype: "m.notice",
-                extra: { payload: "Found somee bad chars!!!" }
-            }
-            matrixClient.sendMessage("!ssJkeRfTBUqpAeveaj:matrix.org", msg);
-        }
-
-        collection.find(q, {}, function (e, docs) {
+        secure_find(req, collection,q, {}, function (e, docs) {
 
             log("GET", "/patients", "Found: [" + JSON.stringify({ "Patients": docs }) + "]");
             res.send({ "Patients": docs });
@@ -180,7 +184,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "_id": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "_id": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId", "Found: [" + JSON.stringify(docs) + "]");
             res.send(docs);
@@ -298,7 +302,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId/consultations", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "PatientId": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "PatientId": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId/consultations", "Found: [" + JSON.stringify({ MedicalConsultations: docs }) + "]");
             res.send({ MedicalConsultations: docs });
@@ -462,7 +466,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId/appointments", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "PatientId": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "PatientId": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId/appointments", "Found: [" + JSON.stringify({ Appointments: docs }) + "]");
             res.send({ Appointments: docs });
@@ -623,7 +627,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId/prescriptions", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "PatientId": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "PatientId": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId/prescriptions", "Found: [" + JSON.stringify({ MedicalPrescriptionsConsultations: docs }) + "]");
             res.send({ Prescriptions: docs });
@@ -785,7 +789,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId/observations", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "PatientId": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "PatientId": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId/observations", "Found: [" + JSON.stringify({ MedicalObservations: docs }) + "]");
             res.send({ MedicalObservations: docs });
@@ -946,7 +950,7 @@ module.exports = function (app) {
         log("GET", "/patients/:PatientId/carer", "DB_COLLECTION_NAME [" + DB_COLLECTION_NAME + "]");
         var collection = db.get(DB_COLLECTION_NAME);
 
-        collection.find({ "PatientId": id }, {}, function (e, docs) {
+        secure_find(req, collection,{ "PatientId": id }, {}, function (e, docs) {
 
             log("GET", "/patients/:PatientId/carer", "Found: [" + JSON.stringify({ Carer: docs }) + "]");
             res.send({ Carer: docs });
@@ -1022,7 +1026,7 @@ module.exports = function (app) {
                 collection = db.get("patients");
 
                 // 1)
-                collection.find({ "_id": id }, {}, function (e, docs) {
+                secure_find(req, collection,{ "_id": id }, {}, function (e, docs) {
                     var patient = docs[0];
 
                     // 2)
