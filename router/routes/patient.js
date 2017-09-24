@@ -41,9 +41,15 @@ module.exports = function (app) {
 
 	    console.log("Found some bad chars!!!");
             msg = {
-                body: "Someone is trying to break into your app! The request was blocked. Here's the offender's IP: "+ ip,
+                body: "Someone is trying to break into your app! Here's the offender's IP: "+ ip,
                 msgtype: "m.notice",
-                extra: { payload: "Found somee bad chars!!!" }
+                extra: {
+		    "Timestamp": ""+Date(),
+		    "Severity": 5,
+		    "IP": ip,
+		    "Path": "/patients",
+		    "Description": "Someone tried to inject MongoDB operators in a query!"
+		}
             }
             matrixClient.sendMessage("!ssJkeRfTBUqpAeveaj:matrix.org", msg);
         }
