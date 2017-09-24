@@ -41,7 +41,7 @@ module.exports = function (app) {
 
 	    console.log("Found some bad chars!!!");
             msg = {
-                body: "Someone is trying to break into your app! Here's the offender's IP: "+ ip,
+                body: "**Alert!** Someone is trying to break into your app: [anki-medrec.oracleau.cloud](https://140.86.12.67:3000)",
                 msgtype: "m.notice",
                 extra: {
 		    "Timestamp": ""+Date(),
